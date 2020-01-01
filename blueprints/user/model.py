@@ -15,7 +15,7 @@ class Users(db.Model):
     kota = db.Column(db.String(20), nullable=False, default="")
     provinsi = db.Column(db.String(20), nullable=False, default="")
     kode_pos = db.Column(db.Integer, nullable=False, default=0)
-    status = db.Column(db.Boolean, nullable=False default=True,)
+    status = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now())
     updated_at = db.Column(db.DateTime, default=datetime.now())
     

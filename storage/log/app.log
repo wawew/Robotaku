@@ -1,0 +1,1 @@
+[2020-01-02 01:22:40,994] {/home/alta-18/Documents/Alterra/Robotaku/blueprints/__init__.py:72} INFO - REQUEST_LOG	{"method": "GET", "code": "200 OK", "request": null, "response": {"page": 1, "total_page": 1, "per_page": 12, "data": []}}

@@ -43,8 +43,8 @@ class ProductResources(Resource):
             qry = qry.limit(args["rp"]).offset(offset)
 
             total_entry = len(qry.all())
-            if total_entry%per_page != 0 or total_entry == 0: total_page = int(total_entry/per_page) + 1
-            else: total_page = int(total_entry/per_page)
+            if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
+            else: total_page = int(total_entry/args["rp"])
             marshal_out = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
             
             for row in qry.all():

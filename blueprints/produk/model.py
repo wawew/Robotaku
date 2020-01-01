@@ -10,7 +10,7 @@ class Products(db.Model):
     harga = db.Column(db.Integer, nullable=False, default=0)
     jumlah = db.Column(db.Integer, nullable=False, default=1)
     kategori = db.Column(db.String(100), nullable=False, default="Komponen & Peralatan")
-    rating = db.Column(db.Float(100), nullable=False, default=0)
+    rating = db.Column(db.Float, nullable=False, default=0)
     deskripsi = db.Column(db.String(200), nullable=False, default="")
     status = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
