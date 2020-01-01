@@ -26,8 +26,12 @@ class Users(db.Model):
         "nama_depan": fields.String,
         "nama_belakang": fields.String,
         "email": fields.String,
-        "telepon": fields.String,
         "password": fields.String,
+        "telepon": fields.String,
+        "alamat": fields.String,
+        "kota": fields.String,
+        "provinsi": fields.String,
+        "kode_pos": fields.Integer,
         "status": fields.Boolean
     }
 
