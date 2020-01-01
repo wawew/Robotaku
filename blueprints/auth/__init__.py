@@ -10,8 +10,8 @@ api = Api(blueprint_auth)
 class CreateTokenResources(Resource):
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("email", location="args", required=True)
-        parser.add_argument("password", location="args", required=True)
+        parser.add_argument("email", location="json", required=True)
+        parser.add_argument("password", location="json", required=True)
         args = parser.parse_args()
         password = hashlib.md5(args["password"].encode()).hexdigest()
         if args["email"] == "admin@robotaku.id" and args["password"] == "W@wew123":
