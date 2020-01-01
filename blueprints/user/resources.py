@@ -51,15 +51,15 @@ class AdminResources(Resource):
     @admin_required
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("username", location="json", required=True)
+        parser.add_argument("email", location="json", required=True)
         parser.add_argument("password", location="json", required=True)
         args = parser.parse_args()
         validation = self.policy.test(args["password"])
         if validation == []:
             pwd_digest = hashlib.md5(args["password"].encode()).hexdigest()
-            user = Users(args["username"], pwd_digest)
-            if Users.query.filter_by(username=args["username"]).all() != []:
-                return {"status": "FAILED", "message": "Username already exists"}, 400, {"Content-Type": "application/json"}
+            user = Users(args["email"], pwd_digest)
+            if Users.query.filter_by(email=args["email"]).all() != []:
+                return {"status": "FAILED", "message": "Email already exists"}, 400, {"Content-Type": "application/json"}
             db.session.add(user)
             db.session.commit()
             return marshal(user, Users.response_fields), 200, {"Content-Type": "application/json"}
@@ -69,7 +69,7 @@ class AdminResources(Resource):
     @admin_required
     def put(self, id=None):
         parser = reqparse.RequestParser()
-        parser.add_argument("username", location="json", required=True)
+        parser.add_argument("email", location="json", required=True)
         parser.add_argument("password", location="json", required=True)
         parser.add_argument("status", type=bool, location="json", required=True)
         args = parser.parse_args()
@@ -79,10 +79,10 @@ class AdminResources(Resource):
                 validation = self.policy.test(args["password"])
                 if validation == []:
                     pwd_digest = hashlib.md5(args["password"].encode()).hexdigest()
-                    if Users.query.get(id).username != args["username"]:
-                        if Users.query.filter_by(username=args["username"]).first() is not None:
-                            return {"status": "FAILED", "message": "Username already exists"}, 400, {"Content-Type": "application/json"}
-                    qry.username = args["username"]
+                    if Users.query.get(id).email != args["email"]:
+                        if Users.query.filter_by(email=args["email"]).first() is not None:
+                            return {"status": "FAILED", "message": "Email already exists"}, 400, {"Content-Type": "application/json"}
+                    qry.email = args["email"]
                     qry.password = pwd_digest
                     qry.status = args["status"]
                     qry.updated_at = datetime.now()
@@ -123,7 +123,7 @@ class UserResources(Resource):
     @nonadmin_required
     def put(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("username", location="json", required=True)
+        parser.add_argument("email", location="json", required=True)
         parser.add_argument("password", location="json", required=True)
         args = parser.parse_args()
         user_claims_data = get_jwt_claims()
@@ -131,10 +131,10 @@ class UserResources(Resource):
         validation = self.policy.test(args["password"])
         if validation == []:
             pwd_digest = hashlib.md5(args["password"].encode()).hexdigest()
-            if Users.query.get(user_claims_data["id"]).username != args["username"]:
-                if Users.query.filter_by(username=args["username"]).first() is not None:
-                    return {"status": "FAILED", "message": "Username already exists"}, 400, {"Content-Type": "application/json"}
-            qry.username = args["username"]
+            if Users.query.get(user_claims_data["id"]).email != args["email"]:
+                if Users.query.filter_by(email=args["email"]).first() is not None:
+                    return {"status": "FAILED", "message": "Email already exists"}, 400, {"Content-Type": "application/json"}
+            qry.email = args["email"]
             qry.password = pwd_digest
             qry.updated_at = datetime.now()
             db.session.commit()
