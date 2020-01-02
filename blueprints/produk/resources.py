@@ -81,8 +81,8 @@ class SpecificationResources(Resource):
         
         qry = Specifications.query.filter_by(product_id=args["product_id"])
         for row in qry.all():
-            marshal_review = marshal(row, Specifications.response_fields)
-            rows.append(marshal_review)
+            marshal_specification = marshal(row, Specifications.response_fields)
+            rows.append(marshal_specification["content"])
         return rows, 200, {"Content-Type": "application/json"}
 
 
@@ -98,6 +98,7 @@ class ReviewResources(Resource):
         offset = (args["p"] - 1)*args["rp"]
         
         qry = Reviews.query.filter_by(product_id=args["product_id"])
+        qry = qry.order_by(Reviews.product_id.desc())
         if args["rating"] is not None:
             qry = qry.filter(Reviews.rating >= args["rating"])
         qry = qry.limit(args["rp"]).offset(offset)

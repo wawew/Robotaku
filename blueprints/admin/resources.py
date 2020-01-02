@@ -80,10 +80,10 @@ class ProductResources(Resource):
     @admin_required
     def post(self):
         parser =reqparse.RequestParser()
-        parser.add_argument("nama", location="args")
-        parser.add_argument("harga", type=int, location="args")
-        parser.add_argument("kategori", location="args")
-        parser.add_argument("deskripsi", location="args")
+        parser.add_argument("nama", location="args", required=True)
+        parser.add_argument("harga", type=int, location="args", required=True)
+        parser.add_argument("kategori", location="args", required=True)
+        parser.add_argument("deskripsi", location="args", required=True)
         args = parser.parse_args()
         product = Products(args["nama"], args["harga"], args["kategori"], args["deskripsi"])
         db.session.add(product)
@@ -122,4 +122,41 @@ class ProductResources(Resource):
         return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
 
 
+class SpecificationResources(Resource):
+    @jwt_required
+    @admin_required
+    def post(self):
+        parser =reqparse.RequestParser()
+        parser.add_argument("product_id", location="args", required=True)
+        parser.add_argument("content", location="args", required=True)
+        args = parser.parse_args()
+        
+        qry = Products.query.get(args["product_id"])
+        if qry is not None:
+            specification = Specifications(args["product_id"], args["content"])
+            db.session.add(specification)
+            db.session.commit()
+            return marshal(specification, Specifications.response_fields), 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+    
+    # @jwt_required
+    # @admin_required
+    # def put(self):
+    #     parser =reqparse.RequestParser()
+    #     parser.add_argument("product_id", location="args")
+    #     parser.add_argument("content", location="args")
+    #     args = parser.parse_args()
+        
+    #     qry = Specifications.query.filter_by(product_id=args["product_id"]).first()
+    #     if qry is not None:
+    #         specification = Specifications(args["product_id"], args["content"])
+    #         if args["content"] is not None:
+    #             qry.content = args["content"]
+    #         qry.updated_at = datetime.now()
+    #         db.session.commit()
+    #         return marshal(specification, Specifications.response_fields), 200, {"Content-Type": "application/json"}
+    #     return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+
+
 api_admin.add_resource(ProductResources, "/product", "/product/<int:id>")
+api_admin.add_resource(SpecificationResources, "/product/specification")
