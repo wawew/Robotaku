@@ -85,7 +85,7 @@ from blueprints.auth import blueprint_auth
 from blueprints.admin import blueprint_admin
 from blueprints.user import blueprint_user
 
-app.register_blueprint(blueprint_auth, url_prefix="/login")
+app.register_blueprint(blueprint_auth, url_prefix="/auth")
 app.register_blueprint(blueprint_user, url_prefix="/user")
 app.register_blueprint(blueprint_admin, url_prefix="/admin")
 
