@@ -4,7 +4,7 @@ from blueprints import db, admin_required
 from sqlalchemy import desc
 from datetime import datetime
 from blueprints.admin import api_admin
-from blueprints.produk.model import Products
+from blueprints.produk.model import Products, Reviews, Specifications
 
 
 class ProductResources(Resource):
