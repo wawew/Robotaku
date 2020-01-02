@@ -5,6 +5,7 @@ from blueprints import db, admin_required
 from sqlalchemy import desc
 from datetime import datetime
 from blueprints.produk.model import Products, Reviews, Specifications
+from blueprints.user.model import Users
 import requests
 
 
@@ -81,8 +82,8 @@ class SpecificationResources(Resource):
         
         qry = Specifications.query.filter_by(product_id=args["product_id"])
         for row in qry.all():
-            marshal_review = marshal(row, Specifications.response_fields)
-            rows.append(marshal_review)
+            marshal_specification = marshal(row, Specifications.response_fields)
+            rows.append(marshal_specification)
         return rows, 200, {"Content-Type": "application/json"}
 
 
@@ -98,6 +99,7 @@ class ReviewResources(Resource):
         offset = (args["p"] - 1)*args["rp"]
         
         qry = Reviews.query.filter_by(product_id=args["product_id"])
+        qry = qry.order_by(Reviews.updated_at.desc())
         if args["rating"] is not None:
             qry = qry.filter(Reviews.rating >= args["rating"])
         qry = qry.limit(args["rp"]).offset(offset)
@@ -109,7 +111,10 @@ class ReviewResources(Resource):
         
         for row in qry.all():
             marshal_review = marshal(row, Reviews.response_fields)
-            rows.append(marshal_review)
+            qry_user = Users.query.get(marshal_review["user_id"])
+            if qry_user is not None:
+                marshal_review["user_fullname"] = qry_user.nama_depan+" "+qry_user.nama_belakang
+                rows.append(marshal_review)
         marshal_out["data"] = rows
         return marshal_out, 200, {"Content-Type": "application/json"}
 
