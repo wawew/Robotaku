@@ -1,13 +1,16 @@
-from flask_restful import Resource, reqparse, marshal, inputs
+from flask_restful import Resource, reqparse, marshal, inputs, Api
 from flask_jwt_extended import jwt_required, get_jwt_claims
+from flask import Blueprint
 from blueprints import db, admin_required, nonadmin_required
 from sqlalchemy import desc
 from password_strength import PasswordPolicy
 from datetime import datetime
-from blueprints.user import api_user
 from blueprints.user.model import Users
 import hashlib
 
+
+blueprint_user = Blueprint("user", __name__)
+api_user = Api(blueprint_user)
 
 class ProfileResources(Resource):
     policy = PasswordPolicy.from_names(

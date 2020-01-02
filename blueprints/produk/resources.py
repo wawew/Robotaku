@@ -1,35 +1,34 @@
-from flask_restful import Resource, reqparse, marshal, inputs
+from flask_restful import Resource, reqparse, marshal, inputs, Api
 from flask_jwt_extended import jwt_required, get_jwt_claims
+from flask import Blueprint
 from blueprints import db, admin_required
 from sqlalchemy import desc
 from datetime import datetime
-from blueprints.admin import api_admin
 from blueprints.produk.model import Products, Reviews, Specifications
 
 
+blueprint_product = Blueprint("product", __name__)
+api_product = Api(blueprint_product)
+
+
 class ProductResources(Resource):
-    @jwt_required
-    @admin_required
     def get(self, id=None):
         if id is None:
             rows = []
             parser =reqparse.RequestParser()
             parser.add_argument("keyword", location="args")
             parser.add_argument("category", location="args")
-            parser.add_argument("lower_price", type=int, location="args")
-            parser.add_argument("upper_price", type=int, location="args")
+            parser.add_argument("lower_price", type=int, location="args", default=0)
+            parser.add_argument("upper_price", type=int, location="args", default=999999999999999)
             parser.add_argument("rating", type=int, location="args")
             parser.add_argument("p", type=int, location="args", default=1)
             parser.add_argument("rp", type=int, location="args", default=12)
-            parser.add_argument("status", location="args", type=inputs.boolean)
             args = parser.parse_args()
             offset = (args["p"] - 1)*args["rp"]
             
-            qry = Products.query
-            if args["status"] is not None:
-                qry = qry.filter_by(status=args["status"])
+            qry = Products.query.filter_by(status=True)
             if args["keyword"] is not None:
-                qry = qry.filter(Products.nama.like("%"+args["title"]+"%"))
+                qry = qry.filter(Products.nama.like("%"+args["keyword"]+"%"))
             if args["category"] is not None:
                 qry = qry.filter_by(kategori=args["category"])
             if args["lower_price"] is not None:
@@ -52,9 +51,9 @@ class ProductResources(Resource):
             return marshal_out, 200, {"Content-Type": "application/json"}
         else:
             qry = Products.query.get(id)
-            if qry is None:
+            if qry is None or not qry.status:
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
             return marshal(qry, Products.response_fields), 200, {"Content-Type": "application/json"}
 
 
-api_admin.add_resource(ProductResources, "/product", "/product/<int:id>")
+api_product.add_resource(ProductResources, "", "/<int:id>")
