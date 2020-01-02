@@ -5,6 +5,7 @@ from flask import Blueprint
 from sqlalchemy import desc
 from datetime import datetime
 from blueprints.produk.model import Products, Reviews, Specifications
+import requests
 
 
 blueprint_admin = Blueprint("admin", __name__)
@@ -19,7 +20,7 @@ class ProductResources(Resource):
             rows = []
             parser =reqparse.RequestParser()
             parser.add_argument("keyword", location="args")
-            parser.add_argument("category", location="args")
+            parser.add_argument("kategori", location="args")
             parser.add_argument("lower_price", type=int, location="args", default=0)
             parser.add_argument("upper_price", type=int, location="args", default=999999999999999)
             parser.add_argument("rating", type=int, location="args")
@@ -34,8 +35,8 @@ class ProductResources(Resource):
                 qry = qry.filter_by(status=args["status"])
             if args["keyword"] is not None:
                 qry = qry.filter(Products.nama.like("%"+args["keyword"]+"%"))
-            if args["category"] is not None:
-                qry = qry.filter_by(kategori=args["category"])
+            if args["kategori"] is not None:
+                qry = qry.filter_by(kategori=args["kategori"])
             if args["lower_price"] is not None:
                 qry = qry.filter(Products.harga >= args["lower_price"])
             if args["upper_price"] is not None:
@@ -58,7 +59,67 @@ class ProductResources(Resource):
             qry = Products.query.get(id)
             if qry is None:
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
-            return marshal(qry, Products.response_fields), 200, {"Content-Type": "application/json"}
+            detail_product = marshal(qry, Products.response_fields)
+            # request specification, lalu append ke query product
+            specification_params = {
+                "product_id": id
+            }
+            requested_data = requests.get("http://localhost:5000/product/specification", json=specification_params)
+            specification_json = requested_data.json()
+            detail_product["specification"] = specification_json
+            # request review, lalu append ke query product
+            review_params = {
+                "product_id": id
+            }
+            requested_data = requests.get("http://localhost:5000/product/review", json=review_params)
+            review_json = requested_data.json()
+            detail_product["reviews"] = review_json
+            return detail_product, 200, {"Content-Type": "application/json"}
+
+    @jwt_required
+    @admin_required
+    def post(self):
+        parser =reqparse.RequestParser()
+        parser.add_argument("nama", location="args")
+        parser.add_argument("harga", type=int, location="args")
+        parser.add_argument("kategori", location="args")
+        parser.add_argument("deskripsi", location="args")
+        args = parser.parse_args()
+        product = Products(args["nama"], args["harga"], args["kategori"], args["deskripsi"])
+        db.session.add(product)
+        db.session.commit()
+        return marshal(product, Products.response_fields), 200, {"Content-Type": "application/json"}
+    
+    @jwt_required
+    @admin_required
+    def put(self, id=None):
+        parser =reqparse.RequestParser()
+        parser.add_argument("nama", location="args")
+        parser.add_argument("harga", type=int, location="args")
+        parser.add_argument("jumlah", type=int, location="args")
+        parser.add_argument("kategori", location="args")
+        parser.add_argument("deskripsi", location="args")
+        parser.add_argument("status", type=inputs.boolean, location="args")
+        args = parser.parse_args()
+        if id is not None:
+            qry = Products.query.get(id)
+            if qry is not None:
+                if args["nama"] is not None:
+                    qry.nama = args["nama"]
+                if args["harga"] is not None:
+                    qry.harga = args["harga"]
+                if args["jumlah"] is not None:
+                    qry.jumlah = args["jumlah"]
+                if args["kategori"] is not None:
+                    qry.kategori = args["kategori"]
+                if args["deskripsi"] is not None:
+                    qry.deskripsi = args["deskripsi"]
+                if args["status"] is not None:
+                    qry.status = args["status"]
+                qry.updated_at = datetime.now()
+                db.session.commit()
+                return marshal(qry, Products.response_fields), 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
 
 
 api_admin.add_resource(ProductResources, "/product", "/product/<int:id>")
