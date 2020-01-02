@@ -80,10 +80,10 @@ class ProductResources(Resource):
     @admin_required
     def post(self):
         parser =reqparse.RequestParser()
-        parser.add_argument("nama", location="args")
-        parser.add_argument("harga", type=int, location="args")
-        parser.add_argument("kategori", location="args")
-        parser.add_argument("deskripsi", location="args")
+        parser.add_argument("nama", location="json", required=True)
+        parser.add_argument("harga", type=int, location="json", required=True)
+        parser.add_argument("kategori", location="json", required=True)
+        parser.add_argument("deskripsi", location="json", required=True)
         args = parser.parse_args()
         product = Products(args["nama"], args["harga"], args["kategori"], args["deskripsi"])
         db.session.add(product)
@@ -94,12 +94,12 @@ class ProductResources(Resource):
     @admin_required
     def put(self, id=None):
         parser =reqparse.RequestParser()
-        parser.add_argument("nama", location="args")
-        parser.add_argument("harga", type=int, location="args")
-        parser.add_argument("jumlah", type=int, location="args")
-        parser.add_argument("kategori", location="args")
-        parser.add_argument("deskripsi", location="args")
-        parser.add_argument("status", type=inputs.boolean, location="args")
+        parser.add_argument("nama", location="json")
+        parser.add_argument("harga", type=int, location="json")
+        parser.add_argument("jumlah", type=int, location="json")
+        parser.add_argument("kategori", location="json")
+        parser.add_argument("deskripsi", location="json")
+        parser.add_argument("status", type=inputs.boolean, location="json")
         args = parser.parse_args()
         if id is not None:
             qry = Products.query.get(id)
@@ -122,4 +122,39 @@ class ProductResources(Resource):
         return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
 
 
+class SpecificationResources(Resource):
+    @jwt_required
+    @admin_required
+    def post(self):
+        parser =reqparse.RequestParser()
+        parser.add_argument("product_id", location="json", required=True)
+        parser.add_argument("content", location="json", required=True)
+        args = parser.parse_args()
+        
+        qry = Products.query.get(args["product_id"])
+        if qry is not None:
+            specification = Specifications(args["product_id"], args["content"])
+            db.session.add(specification)
+            db.session.commit()
+            return marshal(specification, Specifications.response_fields), 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+    
+    @jwt_required
+    @admin_required
+    def put(self, id=None):
+        parser =reqparse.RequestParser()
+        parser.add_argument("content", location="json", required=True)
+        args = parser.parse_args()
+        
+        if id is not None:
+            qry = Specifications.query.get(id)
+            if qry is not None:
+                qry.content = args["content"]
+                qry.updated_at = datetime.now()
+                db.session.commit()
+                return marshal(qry, Specifications.response_fields), 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+
+
 api_admin.add_resource(ProductResources, "/product", "/product/<int:id>")
+api_admin.add_resource(SpecificationResources, "/product/specification", "/product/specification/<int:id>")
