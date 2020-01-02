@@ -1,17 +1,15 @@
-from flask_restful import Resource, Api, reqparse, marshal, inputs
-from flask import Blueprint
+from flask_restful import Resource, reqparse, marshal, inputs
 from flask_jwt_extended import jwt_required, get_jwt_claims
-from blueprints import db, admin_required, nonadmin_required
+from blueprints import db, admin_required
 from sqlalchemy import desc
 from datetime import datetime
-from blueprints.produk.model import *
-
-
-blueprint_produk = Blueprint("produk", __name__)
-api_produk = Api(blueprint_produk)
+from blueprints.admin import api_admin
+from blueprints.produk.model import Products
 
 
 class ProductResources(Resource):
+    @jwt_required
+    @admin_required
     def get(self, id=None):
         if id is None:
             rows = []
@@ -59,4 +57,4 @@ class ProductResources(Resource):
             return marshal(qry, Products.response_fields), 200, {"Content-Type": "application/json"}
 
 
-api_produk.add_resource(ProductResources, "", "/<int:id>")
+api_admin.add_resource(ProductResources, "/product", "/product/<int:id>")

@@ -82,11 +82,11 @@ def after_request(response):
 
 
 from blueprints.auth import blueprint_auth
-from blueprints.produk.resources import blueprint_produk
+from blueprints.admin import blueprint_admin
 from blueprints.user import blueprint_user
 
 app.register_blueprint(blueprint_auth, url_prefix="/login")
 app.register_blueprint(blueprint_user, url_prefix="/user")
-app.register_blueprint(blueprint_produk, url_prefix="/robotaku_product")
+app.register_blueprint(blueprint_admin, url_prefix="/admin")
 
 db.create_all()
