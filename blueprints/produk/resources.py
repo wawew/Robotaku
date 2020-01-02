@@ -5,6 +5,7 @@ from blueprints import db, admin_required
 from sqlalchemy import desc
 from datetime import datetime
 from blueprints.produk.model import Products, Reviews, Specifications
+import requests
 
 
 blueprint_product = Blueprint("product", __name__)
@@ -53,7 +54,30 @@ class ProductResources(Resource):
             qry = Products.query.get(id)
             if qry is None or not qry.status:
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
-            return marshal(qry, Products.response_fields), 200, {"Content-Type": "application/json"}
+            detail_product = marshal(qry, Products.response_fields)
+            # request specification, lalu append ke query product
+            specification_params = {
+                "product_id": id
+            }
+            requested_data = requests.get("http://localhost:5000/product/specification", json=specification_params)
+            specification_json = requested_data.json()
+            detail_product["specification"] = specification_json
+            return detail_product, 200, {"Content-Type": "application/json"}
+
+
+class SpecificationResources(Resource):
+    def get(self):
+        rows = []
+        parser =reqparse.RequestParser()
+        parser.add_argument("product_id", type=int, location="json", required=True)
+        args = parser.parse_args()
+        
+        qry = Specifications.query.filter_by(product_id=args["product_id"])
+        for row in qry.all():
+            marshal_review = marshal(row, Specifications.response_fields)
+            rows.append(marshal_review)
+        return rows, 200, {"Content-Type": "application/json"}
 
 
 api_product.add_resource(ProductResources, "", "/<int:id>")
+api_product.add_resource(SpecificationResources, "/specification")
