@@ -5,6 +5,7 @@ from blueprints import db, admin_required
 from sqlalchemy import desc
 from datetime import datetime
 from blueprints.produk.model import Products, Reviews, Specifications
+import requests
 
 
 blueprint_product = Blueprint("product", __name__)
@@ -53,16 +54,25 @@ class ProductResources(Resource):
             qry = Products.query.get(id)
             if qry is None or not qry.status:
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
-            return marshal(qry, Products.response_fields), 200, {"Content-Type": "application/json"}
+            # request review, lalu append ke query product
+            review_params = {
+                "product_id": id
+            }
+            requseted_data = requests.get("http://localhost:5000/product/review", json=review_params)
+            review_json = requseted_data.json()
+            detail_product = marshal(qry, Products.response_fields)
+            detail_product["reviews"] = review_json
+            return detail_product, 200, {"Content-Type": "application/json"}
 
 
 class ReviewResources(Resource):
     def get(self):
         rows = []
+        parser =reqparse.RequestParser()
         parser.add_argument("product_id", type=int, location="json", required=True)
         parser.add_argument("rating", type=int, location="json")
         parser.add_argument("p", type=int, location="json", default=1)
-        parser.add_argument("rp", type=int, location="json", default=12)
+        parser.add_argument("rp", type=int, location="json", default=3)
         args = parser.parse_args()
         offset = (args["p"] - 1)*args["rp"]
         
