@@ -82,16 +82,13 @@ def after_request(response):
 
 
 from blueprints.auth import blueprint_auth
-from blueprints.user.resources import *
-from blueprints.rekomendasi import bp_rekomendasi
-from blueprints.tmdb import bp_tmdb
-from blueprints.watchlist.resource import blueprint_watchlist
+from blueprints.produk.resources import blueprint_product
+from blueprints.admin.resources import blueprint_admin
+from blueprints.user.resources import blueprint_user
 
-app.register_blueprint(blueprint_auth, url_prefix="/login")
-app.register_blueprint(blueprint_admin, url_prefix="/admin")
+app.register_blueprint(blueprint_auth, url_prefix="/auth")
+app.register_blueprint(blueprint_product, url_prefix="/product")
 app.register_blueprint(blueprint_user, url_prefix="/user")
-app.register_blueprint(bp_rekomendasi, url_prefix='/user/rekomendasi')
-app.register_blueprint(bp_tmdb, url_prefix='/tmdb')
-app.register_blueprint(blueprint_watchlist, url_prefix='/user/watchlist')
+app.register_blueprint(blueprint_admin, url_prefix="/admin")
 
 db.create_all()
