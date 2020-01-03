@@ -10,7 +10,7 @@ class Users(db.Model):
     nama_belakang = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
-    telepon = db.Column(db.String(15), unique=True, nullable=False, default="")
+    telepon = db.Column(db.String(15), unique=True)
     alamat = db.Column(db.String(100), nullable=False, default="")
     kota = db.Column(db.String(20), nullable=False, default="")
     provinsi = db.Column(db.String(20), nullable=False, default="")
