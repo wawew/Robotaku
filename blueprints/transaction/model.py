@@ -3,7 +3,7 @@ from flask_restful import fields
 from datetime import datetime
 
 
-class ShipmentMethodsResources(db.Model):
+class ShipmentMethods(db.Model):
     __tablename__ = "shipment_methods"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     kurir = db.Column(db.String(20), unique=True, nullable=False, default="")
@@ -27,7 +27,7 @@ class ShipmentMethodsResources(db.Model):
         return "<Shipment Methods %r>" % self.id
 
 
-class PaymentMethodsResources(db.Model):
+class PaymentMethods(db.Model):
     __tablename__ = "payment_methods"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nama = db.Column(db.String(20), nullable=False, default="")
@@ -62,6 +62,7 @@ class Transactions(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     shipment_method_id = db.Column(db.Integer, db.ForeignKey('shipment_methods.id'), nullable=False, default=1)
     payment_method_id = db.Column(db.Integer, db.ForeignKey('payment_methods.id'), nullable=False, default=1)
+    total_harga = db.Column(db.Integer, nullable=False, default=0)
     total_tagihan = db.Column(db.Integer, nullable=False, default=0)
     selesai = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
@@ -73,6 +74,7 @@ class Transactions(db.Model):
         "id": fields.Integer,
         "shipment_method_id": fields.Integer,
         "payment_method_id": fields.Integer,
+        "total_harga": fields.Integer,
         "total_tagihan": fields.Integer,
         "selesai": fields.Boolean
     }

@@ -7,7 +7,7 @@ from password_strength import PasswordPolicy
 from datetime import datetime
 from blueprints.user.model import Users
 from blueprints.produk.model import Products
-from blueprints.transaction.model import Transactions, Carts
+from blueprints.transaction.model import Transactions, Carts, PaymentMethods, ShipmentMethods
 from blueprints.produk.resources import ProductResources
 import hashlib, requests
 
@@ -90,7 +90,8 @@ class TransactionResource(Resource):
         transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
         transaction_qry = transaction_qry.filter_by(selesai=False).first()
         if transaction_qry is not None:
-            marshal(transaction_qry, Transactions.response_fields), {"Content-Type": "application/json"}
+            marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
+            return marshal_transaction, 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
     
     @jwt_required
@@ -107,6 +108,7 @@ class TransactionResource(Resource):
         if transaction_qry is not None:
             transaction_qry.shipment_method_id = args["kurir"]
             transaction_qry.payment_method_id = args["payment"]
+            transaction_qry.updated_at = datetime.now()
             db.session.commit()
             return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
@@ -118,13 +120,15 @@ class CartResources(Resource):
     # tampilkan hanya jika transaksi belum selesai
     # def get(self):
     #     user_claims_data = get_jwt_claims()
-    #     qry = Users.query.get(user_claims_data["id"])
-    #     return marshal(qry, Users.response_fields), 200, {"Content-Type": "application/json"}
+    #     transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+    #     transaction_qry = transaction_qry.filter_by(selesai=False).first()
+    #     if transaction_qry is not None:
+    #         marshal(transaction_qry, Transactions.response_fields), {"Content-Type": "application/json"}
+    #     return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
     
     @jwt_required
     @nonadmin_required
     def post(self):
-        rows = []
         user_id = get_jwt_claims()["id"]
         parser =reqparse.RequestParser()
         parser.add_argument("product_id", type=int, location="json", required=True)
@@ -135,12 +139,13 @@ class CartResources(Resource):
         transaction_qry = Transactions.query.filter_by(user_id=user_id)
         if product_qry.jumlah < args["jumlah"]:
             return {"message": "Out of stock"}, 400, {"Content-Type": "application/json"}
+        
         # tambah transaksi jika semua transaksi user sudah selesai
         if transaction_qry.filter_by(selesai=False).first() is None:
             transaction = Transactions(user_id)
             # product_qry.jumlah -= args["jumlah"]
             db.session.add(transaction)
-            db.session.commit()
+            
         # tambah detail transaksi untuk transaksi yang baru ditambahkan jika product_id tidak ditemukan di cart
         last_added_transaction = transaction_qry.order_by(Transactions.id.desc()).first()
         cart_qry = Carts.query.filter_by(product_id=args["product_id"])
@@ -148,17 +153,21 @@ class CartResources(Resource):
         if cart_qry is None:
             cart = Carts(args["product_id"], last_added_transaction.id, args["jumlah"], product_qry.harga*args["jumlah"])
             db.session.add(cart)
-            db.session.commit()
-        # update detail produk (jumlah, subtotal) dan transaksi (total_tagihan) jika product_id ditemukan
+        # update detail produk (jumlah, subtotal) jika product_id ditemukan
         else:
             cart_qry.jumlah = args["jumlah"]
             cart_qry.subtotal = args["jumlah"]*product_qry.harga
+            cart_qry.updated_at = datetime.now()
         
-        total_tagihan = 0
+        total_price = 0
+        shipment_price = ShipmentMethods.query.get(last_added_transaction.shipment_method_id).tarif
+        payment_price = PaymentMethods.query.get(last_added_transaction.payment_method_id).tarif
         for each_item in Carts.query.filter_by(transaction_id=last_added_transaction.id):
-            rows.append(each_item)
-            total_tagihan += each_item.subtotal
-        last_added_transaction.total_tagihan = total_tagihan
+            total_price += each_item.subtotal
+        # update transaksi (total_tagihan, total_harga)
+        last_added_transaction.total_harga = total_price
+        last_added_transaction.total_tagihan = total_price+shipment_price+payment_price
+        last_added_transaction.updated_at = datetime.now()
         db.session.commit()
         return marshal(last_added_transaction, Transactions.response_fields), 200, {"Content-Type": "application/json"}
 
@@ -166,3 +175,4 @@ class CartResources(Resource):
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
 api_user.add_resource(ProfileResources, "/profile")
 api_user.add_resource(CartResources, "/cart")
+api_user.add_resource(TransactionResource, "/transaction")
