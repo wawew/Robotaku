@@ -64,7 +64,7 @@ class Transactions(db.Model):
     payment_method_id = db.Column(db.Integer, db.ForeignKey('payment_methods.id'), nullable=False, default=1)
     total_harga = db.Column(db.Integer, nullable=False, default=0)
     total_tagihan = db.Column(db.Integer, nullable=False, default=0)
-    selesai = db.Column(db.Boolean, default=False, nullable=False)
+    status = db.Column(db.String(10), default="staging", nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
     updated_at = db.Column(db.DateTime, default=datetime.now())
     
