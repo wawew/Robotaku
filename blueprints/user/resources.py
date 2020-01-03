@@ -6,6 +6,8 @@ from sqlalchemy import desc
 from password_strength import PasswordPolicy
 from datetime import datetime
 from blueprints.user.model import Users
+from blueprints.produk.model import Products
+from blueprints.transaction.model import Transactions, Carts
 from blueprints.produk.resources import ProductResources
 import hashlib, requests
 
@@ -77,12 +79,70 @@ class ProfileResources(Resource):
         return {"message": "Succesfully deleted"}, 200, {"Content-Type": "application/json"}
 
 
-class CartResources(Resource):
+class TransactionResource(Resource):
     @jwt_required
     @nonadmin_required
     def get(self):
         user_claims_data = get_jwt_claims()
-        qry = Users.query.get(user_claims_data["id"])
+        transaction_qry = Transactions.query.get(user_claims_data["id"])
+        return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
+    
+    @jwt_required
+    @nonadmin_required
+    def put(self):
+        parser =reqparse.RequestParser()
+        parser.add_argument("kurir", location="json", required=True)
+        parser.add_argument("payment", location="json", required=True)
+        args = parser.parse_args()
+
+        user_claims_data = get_jwt_claims()
+        transaction_qry = Transactions.query.get(user_claims_data["id"])
+        transaction_qry.shipment_method_id = args["kurir"]
+        transaction_qry.payment_method_id = args["payment"]
+        db.session.commit()
+        return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
+
+
+class CartResources(Resource):
+    # @jwt_required
+    # @nonadmin_required
+    # def get(self):
+    #     user_claims_data = get_jwt_claims()
+    #     qry = Users.query.get(user_claims_data["id"])
+    #     return marshal(qry, Users.response_fields), 200, {"Content-Type": "application/json"}
+    
+    @jwt_required
+    @nonadmin_required
+    def post(self):
+        rows = []
+        user_id = get_jwt_claims()["id"]
+        parser =reqparse.RequestParser()
+        parser.add_argument("product_id", type=int, location="json", required=True)
+        parser.add_argument("jumlah", type=int, location="json", required=True)
+        args = parser.parse_args()
+
+        product_qry = Products.query.get(args["product_id"])
+        transaction_qry = Transactions.query.filter_by(user_id=user_id)
+        if product_qry.jumlah < args["jumlah"]:
+            return {"message": "Out of stock"}, 400, {"Content-Type": "application/json"}
+        # tambah transaksi jika semua transaksi user sudah selesai
+        if transaction_qry.filter_by(selesai=False).first() is None:
+            transaction = Transactions(user_id)
+            product_qry.jumlah -= args["jumlah"]
+            db.session.add(transaction)
+            db.session.commit()
+        # tambah detail transaksi untuk transaksi yang baru ditambahkan jika product_id tidak ditemukan
+        last_added_transaction = transaction_qry.order_by(Transactions.id.desc()).first()
+        cart_qry = Carts.query.filter_by(product_id=args["product_id"])
+        cart_qry = cart_qry.filter_by(transaction_id=last_added_transaction.id).first()
+        if cart_qry is None:
+            cart = Carts(args["produk_id"], last_added_transaction.id, args["jumlah"], product_qry.harga*args["jumlah"])
+            db.session.add(cart)
+            db.session.commit()
+        # update detail produk (jumlah, subtotal) dan transaksi (total_tagihan) jika product_id ditemukan
+        else:
+            # requests.put()
+        
         return marshal(qry, Users.response_fields), 200, {"Content-Type": "application/json"}
 
 

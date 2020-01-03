@@ -77,11 +77,8 @@ class Transactions(db.Model):
         "selesai": fields.Boolean
     }
     
-    def __init__(self, user_id, total_tagihan):
-        self.nama = nama
-        self.harga = harga
-        self.kategori = kategori
-        self.deskripsi = deskripsi
+    def __init__(self, user_id):
+        self.user_id = user_id
 
     def __repr__(self):
         return "<Transactions %r>" % self.id
@@ -93,7 +90,7 @@ class Carts(db.Model):
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=False)
     jumlah = db.Column(db.Integer, nullable=False, default=0)
-    harga = db.Column(db.Integer, nullable=False, default=0)
+    subtotal = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now())
     updated_at = db.Column(db.DateTime, default=datetime.now())
     
@@ -104,14 +101,14 @@ class Carts(db.Model):
         "product_id": fields.Integer,
         "transaction_id": fields.Integer,
         "jumlah": fields.Integer,
-        "harga": fields.Integer
+        "subtotal": fields.Integer
     }
     
-    def __init__(self, product_id, transaction_id, jumlah, harga):
+    def __init__(self, product_id, transaction_id, jumlah, subtotal):
         self.product_id = product_id
         self.transaction_id = transaction_id
         self.jumlah = jumlah
-        self.harga = harga
+        self.subtotal = subtotal
 
     def __repr__(self):
         return "<Carts %r>" % self.id
