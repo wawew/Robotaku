@@ -84,8 +84,11 @@ class TransactionResource(Resource):
     @nonadmin_required
     def get(self):
         user_claims_data = get_jwt_claims()
-        transaction_qry = Transactions.query.get(user_claims_data["id"])
-        return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
+        transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+        transaction_qry = transaction_qry.filter_by(selesai=False).first()
+        if transaction_qry is not None:
+            return marshal_transaction, 200, {"Content-Type": "application/json"}
+        return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
     
     @jwt_required
     @nonadmin_required
@@ -96,11 +99,14 @@ class TransactionResource(Resource):
         args = parser.parse_args()
 
         user_claims_data = get_jwt_claims()
-        transaction_qry = Transactions.query.get(user_claims_data["id"])
-        transaction_qry.shipment_method_id = args["kurir"]
-        transaction_qry.payment_method_id = args["payment"]
-        db.session.commit()
-        return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
+        transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+        transaction_qry = transaction_qry.filter_by(selesai=False).first()
+        if transaction_qry is not None:
+            transaction_qry.shipment_method_id = args["kurir"]
+            transaction_qry.payment_method_id = args["payment"]
+            db.session.commit()
+            return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
+        return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
 
 
 class CartResources(Resource):
@@ -141,9 +147,8 @@ class CartResources(Resource):
             db.session.commit()
         # update detail produk (jumlah, subtotal) dan transaksi (total_tagihan) jika product_id ditemukan
         else:
-            # requests.put()
-        
-        return marshal(qry, Users.response_fields), 200, {"Content-Type": "application/json"}
+            pass
+        return marshal(cart_qry, Carts.response_fields), 200, {"Content-Type": "application/json"}
 
 
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
