@@ -52,9 +52,12 @@ class ProfileResources(Resource):
         validation = self.policy.test(args["password"])
         if validation == []:
             pwd_digest = hashlib.md5(args["password"].encode()).hexdigest()
-            if Users.query.get(user_claims_data["id"]).email != args["email"]:
+            if qry.email != args["email"]:
                 if Users.query.filter_by(email=args["email"]).first() is not None:
                     return {"status": "FAILED", "message": "Email already exists"}, 400, {"Content-Type": "application/json"}
+            if qry.telepon != args["telepon"]:
+                if Users.query.filter_by(telepon=args["telepon"]).first() is not None:
+                    return {"status": "FAILED", "message": "Phone already exists"}, 400, {"Content-Type": "application/json"}
             qry.nama_depan = args["nama_depan"]
             qry.nama_belakang = args["nama_belakang"]
             qry.email = args["email"]
@@ -87,7 +90,7 @@ class TransactionResource(Resource):
         transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
         transaction_qry = transaction_qry.filter_by(selesai=False).first()
         if transaction_qry is not None:
-            return marshal_transaction, 200, {"Content-Type": "application/json"}
+            marshal(transaction_qry, Transactions.response_fields), {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
     
     @jwt_required
@@ -112,6 +115,7 @@ class TransactionResource(Resource):
 class CartResources(Resource):
     # @jwt_required
     # @nonadmin_required
+    # tampilkan hanya jika transaksi belum selesai
     # def get(self):
     #     user_claims_data = get_jwt_claims()
     #     qry = Users.query.get(user_claims_data["id"])
@@ -134,22 +138,31 @@ class CartResources(Resource):
         # tambah transaksi jika semua transaksi user sudah selesai
         if transaction_qry.filter_by(selesai=False).first() is None:
             transaction = Transactions(user_id)
-            product_qry.jumlah -= args["jumlah"]
+            # product_qry.jumlah -= args["jumlah"]
             db.session.add(transaction)
             db.session.commit()
-        # tambah detail transaksi untuk transaksi yang baru ditambahkan jika product_id tidak ditemukan
+        # tambah detail transaksi untuk transaksi yang baru ditambahkan jika product_id tidak ditemukan di cart
         last_added_transaction = transaction_qry.order_by(Transactions.id.desc()).first()
         cart_qry = Carts.query.filter_by(product_id=args["product_id"])
         cart_qry = cart_qry.filter_by(transaction_id=last_added_transaction.id).first()
         if cart_qry is None:
-            cart = Carts(args["produk_id"], last_added_transaction.id, args["jumlah"], product_qry.harga*args["jumlah"])
+            cart = Carts(args["product_id"], last_added_transaction.id, args["jumlah"], product_qry.harga*args["jumlah"])
             db.session.add(cart)
             db.session.commit()
         # update detail produk (jumlah, subtotal) dan transaksi (total_tagihan) jika product_id ditemukan
         else:
-            pass
-        return marshal(cart_qry, Carts.response_fields), 200, {"Content-Type": "application/json"}
+            cart_qry.jumlah = args["jumlah"]
+            cart_qry.subtotal = args["jumlah"]*product_qry.harga
+        
+        total_tagihan = 0
+        for each_item in Carts.query.filter_by(transaction_id=last_added_transaction.id):
+            rows.append(each_item)
+            total_tagihan += each_item.subtotal
+        last_added_transaction.total_tagihan = total_tagihan
+        db.session.commit()
+        return marshal(last_added_transaction, Transactions.response_fields), 200, {"Content-Type": "application/json"}
 
 
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
 api_user.add_resource(ProfileResources, "/profile")
+api_user.add_resource(CartResources, "/cart")

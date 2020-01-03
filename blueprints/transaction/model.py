@@ -31,7 +31,7 @@ class PaymentMethodsResources(db.Model):
     __tablename__ = "payment_methods"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nama = db.Column(db.String(20), nullable=False, default="")
-    norek = db.Column(db.String(20), unique=True, nullable=False, default="")
+    norek = db.Column(db.String(20), unique=True, nullable=False)
     pemilik = db.Column(db.String(30), nullable=False, default="PT. Robotaku")
     tarif = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, default=datetime.now())
