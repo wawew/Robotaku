@@ -76,7 +76,7 @@ class Transactions(db.Model):
         "payment_method_id": fields.Integer,
         "total_harga": fields.Integer,
         "total_tagihan": fields.Integer,
-        "selesai": fields.Boolean
+        "status": fields.String
     }
     
     def __init__(self, user_id):

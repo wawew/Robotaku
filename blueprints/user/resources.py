@@ -128,7 +128,7 @@ class CartResources(Resource):
         transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
         transaction_qry = transaction_qry.filter_by(status="staging").first()
         if transaction_qry is not None:
-            cart_qry = Carts.query.filter_by(product_id=transaction_qry.id)
+            cart_qry = Carts.query.filter_by(transaction_id=transaction_qry.id)
             for each_item in cart_qry:
                 marshal_cart = marshal(each_item, Carts.response_fields)
                 rows.append(marshal_cart)
@@ -152,10 +152,9 @@ class CartResources(Resource):
             return {"message": "Out of stock"}, 400, {"Content-Type": "application/json"}
         
         # tambah transaksi jika semua transaksi user sudah selesai
-        if transaction_qry.filter(Transactions.status != "complete").first() is None:
-            if transaction_qry.filter(Transactions.status != "failed").first() is None:
-                transaction = Transactions(user_id)
-                db.session.add(transaction)
+        if transaction_qry.filter_by(status="staging").first() is None:
+            transaction = Transactions(user_id)
+            db.session.add(transaction)
             
         # tambah detail transaksi untuk transaksi yang baru ditambahkan jika product_id tidak ditemukan di cart
         last_added_transaction = transaction_qry.order_by(Transactions.id.desc()).first()
