@@ -118,7 +118,7 @@ class ReviewResources(Resource):
         marshal_out["data"] = rows
         return marshal_out, 200, {"Content-Type": "application/json"}
 
-      
+
 api_product.add_resource(ProductResources, "", "/<int:id>")
 api_product.add_resource(SpecificationResources, "/specification")
 api_product.add_resource(ReviewResources, "/review")

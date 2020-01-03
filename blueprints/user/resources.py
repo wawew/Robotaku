@@ -6,11 +6,13 @@ from sqlalchemy import desc
 from password_strength import PasswordPolicy
 from datetime import datetime
 from blueprints.user.model import Users
+from blueprints.produk.resources import ProductResources
 import hashlib
 
 
 blueprint_user = Blueprint("user", __name__)
 api_user = Api(blueprint_user)
+
 
 class ProfileResources(Resource):
     policy = PasswordPolicy.from_names(
@@ -75,4 +77,5 @@ class ProfileResources(Resource):
         return {"message": "Succesfully deleted"}, 200, {"Content-Type": "application/json"}
 
 
+api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
 api_user.add_resource(ProfileResources, "/profile")
