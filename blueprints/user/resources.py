@@ -7,7 +7,7 @@ from password_strength import PasswordPolicy
 from datetime import datetime
 from blueprints.user.model import Users
 from blueprints.produk.resources import ProductResources
-import hashlib
+import hashlib, requests
 
 
 blueprint_user = Blueprint("user", __name__)
@@ -75,6 +75,15 @@ class ProfileResources(Resource):
         qry.status = False
         db.session.commit()
         return {"message": "Succesfully deleted"}, 200, {"Content-Type": "application/json"}
+
+
+class CartResources(Resource):
+    @jwt_required
+    @nonadmin_required
+    def get(self):
+        user_claims_data = get_jwt_claims()
+        qry = Users.query.get(user_claims_data["id"])
+        return marshal(qry, Users.response_fields), 200, {"Content-Type": "application/json"}
 
 
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
