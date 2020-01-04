@@ -6,7 +6,7 @@ class TestAuthCrud():
     def test_invalid_user(self, user):
         reset_db()
         data = {"email": "wawawaw", "password": "W@wew123"}
-        res = user.get("/login", query_string=data)
+        res = user.get("/auth", json=data)
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)
         assert res.status_code == 401

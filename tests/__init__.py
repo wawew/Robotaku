@@ -45,7 +45,7 @@ def create_token(is_admin=True):
             }
         # do request
         req = call_user(request)
-        res = req.get("/login", query_string=data)
+        res = req.get("/auth", json=data)
         # store response
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)
