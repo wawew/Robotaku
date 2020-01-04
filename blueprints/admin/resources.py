@@ -210,6 +210,20 @@ class UserManagementResources(Resource):
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
             detail_user = marshal(user_qry, Users.response_fields)
             return detail_user, 200, {"Content-Type": "application/json"}
+        
+    @jwt_required
+    @admin_required
+    def put(self, id=None):
+        parser =reqparse.RequestParser()
+        parser.add_argument("status", location="json", type=inputs.boolean)
+        args = parser.parse_args()
+        if id is not None:
+            user_qry = Users.query.get(id)
+            if args["status"] is not None and user_qry is not None:
+                user_qry.status = args["status"]
+                detail_user = marshal(user_qry, Users.response_fields)
+                return detail_user, 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
 
 
 api_admin.add_resource(ProductManagementResources, "/product", "/product/<int:id>")
