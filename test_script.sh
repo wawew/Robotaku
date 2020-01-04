@@ -10,5 +10,5 @@ export THIS_DB_DEV="robotaku" # ganti ke nama database yang dipake untuk develop
 mysql --user=$THIS_UNAME --password=$THIS_PWD -e "create database if not exists $THIS_DB_DEV; create database if not exists $THIS_DB_TEST"
 
 export FLASK_ENV="testing"
-pytest --cov-fail-under=96 --cov=blueprints --cov-report html -s tests/*
+pytest --cov-fail-under=96 --cov=blueprints --cov-report html -s tests/
 export FLASK_ENV="development"
