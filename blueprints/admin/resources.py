@@ -5,6 +5,7 @@ from flask import Blueprint
 from sqlalchemy import desc
 from datetime import datetime
 from blueprints.produk.model import Products, Reviews, Specifications
+from blueprints.user.model import Users
 import requests
 
 
@@ -12,7 +13,7 @@ blueprint_admin = Blueprint("admin", __name__)
 api_admin = Api(blueprint_admin)
 
 
-class ProductResources(Resource):
+class ProductManagementResources(Resource):
     @jwt_required
     @admin_required
     def get(self, id=None):
@@ -117,7 +118,7 @@ class ProductResources(Resource):
         return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
 
 
-class SpecificationResources(Resource):
+class SpecificationManagementResources(Resource):
     @jwt_required
     @admin_required
     def post(self):
@@ -151,5 +152,66 @@ class SpecificationResources(Resource):
         return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
 
 
-api_admin.add_resource(ProductResources, "/product", "/product/<int:id>")
-api_admin.add_resource(SpecificationResources, "/product/specification", "/product/specification/<int:id>")
+class UserManagementResources(Resource):
+    @jwt_required
+    @admin_required
+    def get(self, id=None):
+        if id is None:
+            rows = []
+            parser =reqparse.RequestParser()
+            parser.add_argument("nama_depan", location="args")
+            parser.add_argument("nama_belakang", location="args")
+            parser.add_argument("email", location="args")
+            parser.add_argument("telepon", location="args")
+            parser.add_argument("alamat", location="args")
+            parser.add_argument("kota", location="args")
+            parser.add_argument("provinsi", location="args")
+            parser.add_argument("kode_pos", location="args")
+            parser.add_argument("status", location="args", type=inputs.boolean)
+            parser.add_argument("p", type=int, location="args", default=1)
+            parser.add_argument("rp", type=int, location="args", default=12)
+            args = parser.parse_args()
+            offset = (args["p"] - 1)*args["rp"]
+            
+            user_qry = Users.query
+            if args["status"] is not None:
+                user_qry = user_qry.filter_by(status=args["status"])
+            if args["nama_depan"] is not None:
+                user_qry = user_qry.filter(Users.nama_depan.like("%"+args["nama_depan"]+"%"))
+            if args["nama_belakang"] is not None:
+                user_qry = user_qry.filter(Users.nama_belakang.like("%"+args["nama_belakang"]+"%"))
+            if args["email"] is not None:
+                user_qry = user_qry.filter(Users.email.like("%"+args["email"]+"%"))
+            if args["telepon"] is not None:
+                user_qry = user_qry.filter(Users.telepon.like("%"+args["telepon"]+"%"))
+            if args["alamat"] is not None:
+                user_qry = user_qry.filter(Users.alamat.like("%"+args["alamat"]+"%"))
+            if args["kota"] is not None:
+                user_qry = user_qry.filter(Users.kota.like("%"+args["kota"]+"%"))
+            if args["provinsi"] is not None:
+                user_qry = user_qry.filter(Users.provinsi.like("%"+args["provinsi"]+"%"))
+            if args["kode_pos"] is not None:
+                user_qry = user_qry.filter(Users.kode_pos.like("%"+args["kode_pos"]+"%"))
+            user_qry = user_qry.limit(args["rp"]).offset(offset)
+
+            total_entry = len(user_qry.all())
+            if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
+            else: total_page = int(total_entry/args["rp"])
+            marshal_out = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
+            
+            for row in user_qry.all():
+                marshal_user = marshal(row, Users.response_fields)
+                rows.append(marshal_user)
+            marshal_out["data"] = rows
+            return marshal_out, 200, {"Content-Type": "application/json"}
+        else:
+            user_qry = Users.query.get(id)
+            if user_qry is None:
+                return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+            detail_user = marshal(user_qry, Users.response_fields)
+            return detail_user, 200, {"Content-Type": "application/json"}
+
+
+api_admin.add_resource(ProductManagementResources, "/product", "/product/<int:id>")
+api_admin.add_resource(SpecificationManagementResources, "/product/specification", "/product/specification/<int:id>")
+api_admin.add_resource(UserManagementResources, "/user", "/user/<int:id>")

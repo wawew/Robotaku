@@ -51,7 +51,7 @@ class CreateTokenResources(Resource):
             pwd_digest = hashlib.md5(args["password"].encode()).hexdigest()
             user = Users(args["nama_depan"], args["nama_belakang"], args["email"], pwd_digest)
             if Users.query.filter_by(email=args["email"]).all() != []:
-                return {"status": "FAILED", "message": "Username already exists"}, 400, {"Content-Type": "application/json"}
+                return {"status": "FAILED", "message": "Email already exists"}, 400, {"Content-Type": "application/json"}
             db.session.add(user)
             db.session.commit()
             return marshal(user, Users.response_fields), 200, {"Content-Type": "application/json"}
