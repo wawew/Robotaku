@@ -72,6 +72,7 @@ class Transactions(db.Model):
         "created_at": fields.DateTime,
         "updated_at": fields.DateTime,
         "id": fields.Integer,
+        "user_id": fields.Integer,
         "shipment_method_id": fields.Integer,
         "payment_method_id": fields.Integer,
         "total_harga": fields.Integer,

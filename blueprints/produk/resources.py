@@ -39,18 +39,21 @@ class ProductResources(Resource):
                 qry = qry.filter(Products.harga <= args["upper_price"])
             if args["rating"] is not None:
                 qry = qry.filter(Products.rating >= args["rating"])
+            
+            total_entry = len(qry.all())
             qry = qry.limit(args["rp"]).offset(offset)
 
-            total_entry = len(qry.all())
             if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
             else: total_page = int(total_entry/args["rp"])
-            marshal_out = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
+            result_json = {
+                "total_entry": total_entry, "page":args["p"], "total_page":total_page, "per_page":args["rp"]
+            }
             
             for row in qry.all():
                 marshal_product = marshal(row, Products.response_fields)
                 rows.append(marshal_product)
-            marshal_out["data"] = rows
-            return marshal_out, 200, {"Content-Type": "application/json"}
+            result_json["data"] = rows
+            return result_json, 200, {"Content-Type": "application/json"}
         else:
             qry = Products.query.get(id)
             if qry is None or not qry.status:
@@ -97,12 +100,15 @@ class ReviewResources(Resource):
         qry = qry.order_by(Reviews.updated_at.desc())
         if args["rating"] is not None:
             qry = qry.filter(Reviews.rating >= args["rating"])
+        
+        total_entry = len(qry.all())
         qry = qry.limit(args["rp"]).offset(offset)
 
-        total_entry = len(qry.all())
         if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
         else: total_page = int(total_entry/args["rp"])
-        marshal_out = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
+        result_json = {
+            "total_entry": total_entry, "page":args["p"], "total_page":total_page, "per_page":args["rp"]
+        }
         
         for row in qry.all():
             marshal_review = marshal(row, Reviews.response_fields)
@@ -110,8 +116,8 @@ class ReviewResources(Resource):
             if qry_user is not None:
                 marshal_review["user_fullname"] = qry_user.nama_depan+" "+qry_user.nama_belakang
                 rows.append(marshal_review)
-        marshal_out["data"] = rows
-        return marshal_out, 200, {"Content-Type": "application/json"}
+        result_json["data"] = rows
+        return result_json, 200, {"Content-Type": "application/json"}
 
 
 api_product.add_resource(ProductResources, "", "/<int:id>")
