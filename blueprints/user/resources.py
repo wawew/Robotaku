@@ -98,11 +98,19 @@ class TransactionResource(Resource):
             transaction_qry = Transactions.query.get(id)
             if transaction_qry is not None:
                 marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
+                shipment_method_qry = ShipmentMethods.query.get(marshal_transaction["shipment_method_id"])
+                payment_method_qry = PaymentMethods.query.get(marshal_transaction["payment_method_id"])
+                if marshal_transaction["status"] != "staging":
+                    marshal_transaction["shipment_method"] = marshal(shipment_method_qry, ShipmentMethods.response_fields)
+                    marshal_transaction["payment_method"] = marshal(payment_method_qry, PaymentMethods.response_fields)
+                del marshal_transaction["shipment_method_id"]
+                del marshal_transaction["payment_method_id"]
                 return marshal_transaction, 200, {"Content-Type": "application/json"}
         # show all filtered transaction history
         else:
             user_claims_data = get_jwt_claims()
             transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+            transaction_qry = transaction_qry.order_by(Transactions.updated_at.desc())
             if args["status"] is not None:
                 transaction_qry = transaction_qry.filter_by(status=args["status"])
             transaction_qry = transaction_qry.limit(args["rp"]).offset(offset)
@@ -114,9 +122,11 @@ class TransactionResource(Resource):
             rows = []
             for each_transaction in transaction_qry.all():
                 marshal_transaction = marshal(each_transaction, Transactions.response_fields)
+                if marshal_transaction["status"] == "staging":
+                    marshal_transaction["shipment_method_id"] = None
+                    marshal_transaction["payment_method_id"] = None
                 rows.append(marshal_transaction)
             result_json["transaction"] = rows
-            print(result_json)
             return result_json, 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
 
