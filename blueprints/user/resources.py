@@ -113,12 +113,16 @@ class TransactionResource(Resource):
             transaction_qry = transaction_qry.order_by(Transactions.updated_at.desc())
             if args["status"] is not None:
                 transaction_qry = transaction_qry.filter_by(status=args["status"])
-            transaction_qry = transaction_qry.limit(args["rp"]).offset(offset)
             
             total_entry = len(transaction_qry.all())
+            transaction_qry = transaction_qry.limit(args["rp"]).offset(offset)
+            
             if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
             else: total_page = int(total_entry/args["rp"])
-            result_json = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
+            result_json = {
+                "total_entry": total_entry, "page":args["p"], "total_page":total_page, "per_page":args["rp"]
+            }
+            
             rows = []
             for each_transaction in transaction_qry.all():
                 marshal_transaction = marshal(each_transaction, Transactions.response_fields)
