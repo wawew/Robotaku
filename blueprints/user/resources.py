@@ -43,7 +43,7 @@ class ProfileResources(Resource):
         parser.add_argument("alamat", location="json", required=True)
         parser.add_argument("kota", location="json", required=True)
         parser.add_argument("provinsi", location="json", required=True)
-        parser.add_argument("kode_pos", location="json", type=int, required=True)
+        parser.add_argument("kode_pos", location="json", required=True)
         args = parser.parse_args()
 
         user_claims_data = get_jwt_claims()

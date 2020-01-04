@@ -14,7 +14,7 @@ class Users(db.Model):
     alamat = db.Column(db.String(100), nullable=False, default="")
     kota = db.Column(db.String(20), nullable=False, default="")
     provinsi = db.Column(db.String(20), nullable=False, default="")
-    kode_pos = db.Column(db.Integer, nullable=False, default=0)
+    kode_pos = db.Column(db.String(10), nullable=False, default="")
     status = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.now())
     updated_at = db.Column(db.DateTime, default=datetime.now())
@@ -31,7 +31,7 @@ class Users(db.Model):
         "alamat": fields.String,
         "kota": fields.String,
         "provinsi": fields.String,
-        "kode_pos": fields.Integer,
+        "kode_pos": fields.String,
         "status": fields.Boolean
     }
 
