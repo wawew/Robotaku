@@ -228,6 +228,7 @@ class UserManagementResources(Resource):
             user_qry = Users.query.get(id)
             if args["status"] is not None and user_qry is not None:
                 user_qry.status = args["status"]
+                db.session.commit()
                 detail_user = marshal(user_qry, Users.response_fields)
                 return detail_user, 200, {"Content-Type": "application/json"}
         return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
@@ -304,6 +305,31 @@ class TransactionManagementResources(Resource):
             result_json["transaction"] = rows
             return result_json, 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
+
+    # accept user transaction jika statusnya "waiting" (sedang menunggu pembayaran)
+    def put(self, id=None):
+        if id is not None:
+            transaction_qry = Transactions.query.get(id)
+            if transaction_qry is not None and transaction_qry.status == "waiting":
+                transaction_qry.status = "complete"
+                transaction_qry.updated_at = datetime.now()
+                db.session.commit()
+                detail_transaction = marshal(transaction_qry, Transactions.response_fields)
+                return detail_transaction, 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+    
+    # decline user transaction jika statusnya "waiting" (sedang menunggu pembayaran)
+    def delete(self, id=None):
+        if id is not None:
+            transaction_qry = Transactions.query.get(id)
+            if transaction_qry is not None and transaction_qry.status == "waiting":
+                transaction_qry.status = "failed"
+                transaction_qry.updated_at = datetime.now()
+                db.session.commit()
+                detail_transaction = marshal(transaction_qry, Transactions.response_fields)
+                return detail_transaction, 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+
 
 
 api_admin.add_resource(ProductManagementResources, "/product", "/product/<int:id>")
