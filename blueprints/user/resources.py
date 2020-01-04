@@ -43,7 +43,7 @@ class ProfileResources(Resource):
         parser.add_argument("alamat", location="json", required=True)
         parser.add_argument("kota", location="json", required=True)
         parser.add_argument("provinsi", location="json", required=True)
-        parser.add_argument("kode_pos", location="json", type=int, required=True)
+        parser.add_argument("kode_pos", location="json", required=True)
         args = parser.parse_args()
 
         user_claims_data = get_jwt_claims()
@@ -85,15 +85,84 @@ class ProfileResources(Resource):
 class TransactionResource(Resource):
     @jwt_required
     @nonadmin_required
+    def get(self, id=None):
+        parser =reqparse.RequestParser()
+        parser.add_argument("status", location="args")
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=5)
+        args = parser.parse_args()
+        offset = (args["p"] - 1)*args["rp"]
+
+        # show selected transaction history
+        if id is not None:
+            transaction_qry = Transactions.query.get(id)
+            if transaction_qry is not None:
+                marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
+                shipment_method_qry = ShipmentMethods.query.get(marshal_transaction["shipment_method_id"])
+                payment_method_qry = PaymentMethods.query.get(marshal_transaction["payment_method_id"])
+                if marshal_transaction["status"] != "staging":
+                    marshal_transaction["shipment_method"] = marshal(shipment_method_qry, ShipmentMethods.response_fields)
+                    marshal_transaction["payment_method"] = marshal(payment_method_qry, PaymentMethods.response_fields)
+                del marshal_transaction["shipment_method_id"]
+                del marshal_transaction["payment_method_id"]
+                return marshal_transaction, 200, {"Content-Type": "application/json"}
+        # show all filtered transaction history
+        else:
+            user_claims_data = get_jwt_claims()
+            transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+            transaction_qry = transaction_qry.order_by(Transactions.updated_at.desc())
+            if args["status"] is not None:
+                transaction_qry = transaction_qry.filter_by(status=args["status"])
+            transaction_qry = transaction_qry.limit(args["rp"]).offset(offset)
+            
+            total_entry = len(transaction_qry.all())
+            if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
+            else: total_page = int(total_entry/args["rp"])
+            result_json = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
+            rows = []
+            for each_transaction in transaction_qry.all():
+                marshal_transaction = marshal(each_transaction, Transactions.response_fields)
+                if marshal_transaction["status"] == "staging":
+                    marshal_transaction["shipment_method_id"] = None
+                    marshal_transaction["payment_method_id"] = None
+                rows.append(marshal_transaction)
+            result_json["transaction"] = rows
+            return result_json, 200, {"Content-Type": "application/json"}
+        return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
+
+
+class ShipmentResource(Resource):
+    @jwt_required
+    @nonadmin_required
     def get(self):
+        parser =reqparse.RequestParser()
+        parser.add_argument("shipment_method_id", type=int, location="json", required=True)
+        parser.add_argument("payment_method_id", type=int, location="json", required=True)
+        args = parser.parse_args()
+
         user_claims_data = get_jwt_claims()
         transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
         transaction_qry = transaction_qry.filter_by(status="staging").first()
         if transaction_qry is not None:
-            marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
-            return marshal_transaction, 200, {"Content-Type": "application/json"}
+            result_json = {}
+            user_qry = Users.query.get(user_claims_data["id"])
+            shipment_price = ShipmentMethods.query.get(args["shipment_method_id"]).tarif
+            payment_price = PaymentMethods.query.get(args["payment_method_id"]).tarif
+            result_json["alamat_lengkap"] = {
+                "alamat": user_qry.alamat,
+                "kota": user_qry.kota,
+                "provinsi": user_qry.provinsi,
+                "kode_pos": user_qry.kode_pos
+            }
+            cart_qry = Carts.query.filter_by(transaction_id=transaction_qry.id)
+            result_json["total_product"] = len(cart_qry.all())
+            result_json["total_harga"] = transaction_qry.total_harga
+            result_json["tarif_pengiriman"] = shipment_price
+            result_json["tarif_pembayaran"] = payment_price
+            result_json["total_tagihan"] = transaction_qry.total_harga+shipment_price+payment_price
+            return result_json, 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
-    
+
     @jwt_required
     @nonadmin_required
     def put(self):
@@ -129,7 +198,7 @@ class CartResources(Resource):
         transaction_qry = transaction_qry.filter_by(status="staging").first()
         if transaction_qry is not None:
             cart_qry = Carts.query.filter_by(transaction_id=transaction_qry.id)
-            for each_item in cart_qry:
+            for each_item in cart_qry.all():
                 marshal_cart = marshal(each_item, Carts.response_fields)
                 rows.append(marshal_cart)
             return rows, 200, {"Content-Type": "application/json"}
@@ -138,14 +207,14 @@ class CartResources(Resource):
     @jwt_required
     @nonadmin_required
     def post(self):
-        user_id = get_jwt_claims()["id"]
+        user_claims_data = get_jwt_claims()
         parser =reqparse.RequestParser()
         parser.add_argument("product_id", type=int, location="json", required=True)
         parser.add_argument("jumlah", type=int, location="json", required=True)
         args = parser.parse_args()
 
         product_qry = Products.query.get(args["product_id"])
-        transaction_qry = Transactions.query.filter_by(user_id=user_id)
+        transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
         if transaction_qry.filter_by(status="waiting").first() is not None:
             return {"message": "Please complete your payment"}, 400, {"Content-Type": "application/json"}
         if product_qry.jumlah < args["jumlah"]:
@@ -153,7 +222,7 @@ class CartResources(Resource):
         
         # tambah transaksi jika semua transaksi user sudah selesai
         if transaction_qry.filter_by(status="staging").first() is None:
-            transaction = Transactions(user_id)
+            transaction = Transactions(user_claims_data["id"])
             db.session.add(transaction)
             
         # tambah detail transaksi untuk transaksi yang baru ditambahkan jika product_id tidak ditemukan di cart
@@ -170,7 +239,7 @@ class CartResources(Resource):
             cart_qry.updated_at = datetime.now()
         
         total_price = 0
-        for each_item in Carts.query.filter_by(transaction_id=last_added_transaction.id):
+        for each_item in Carts.query.filter_by(transaction_id=last_added_transaction.id).all():
             total_price += each_item.subtotal
         # update transaksi (total_tagihan, total_harga)
         last_added_transaction.total_harga = total_price
@@ -182,4 +251,5 @@ class CartResources(Resource):
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
 api_user.add_resource(ProfileResources, "/profile")
 api_user.add_resource(CartResources, "/cart")
-api_user.add_resource(TransactionResource, "/transaction")
+api_user.add_resource(ShipmentResource, "/shipment")
+api_user.add_resource(TransactionResource, "/transaction", "/transaction/<int:id>")
