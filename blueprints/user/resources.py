@@ -78,6 +78,7 @@ class ProfileResources(Resource):
         user_claims_data = get_jwt_claims()
         qry = Users.query.get(user_claims_data["id"])
         qry.status = False
+        qry.updated_at = datetime.now()
         db.session.commit()
         return {"message": "Succesfully deleted"}, 200, {"Content-Type": "application/json"}
 
@@ -85,6 +86,8 @@ class ProfileResources(Resource):
 class TransactionResource(Resource):
     @jwt_required
     @nonadmin_required
+    # hanya menampilkan transaksi menunggu pembayaran (waiting),
+    # berhasil (complete), dan dibatalkan (failed)
     def get(self, id=None):
         parser =reqparse.RequestParser()
         parser.add_argument("status", location="args")
@@ -93,9 +96,10 @@ class TransactionResource(Resource):
         args = parser.parse_args()
         offset = (args["p"] - 1)*args["rp"]
 
-        # show selected transaction history
+        # tampilkan detail riwayat transaksi tertentu
+        transaction_qry = Transactions.query.filter(Transactions.status != "staging")
         if id is not None:
-            transaction_qry = Transactions.query.get(id)
+            transaction_qry = transaction_qry.get(id)
             if transaction_qry is not None:
                 marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
                 shipment_method_qry = ShipmentMethods.query.get(marshal_transaction["shipment_method_id"])
@@ -106,19 +110,23 @@ class TransactionResource(Resource):
                 del marshal_transaction["shipment_method_id"]
                 del marshal_transaction["payment_method_id"]
                 return marshal_transaction, 200, {"Content-Type": "application/json"}
-        # show all filtered transaction history
+        # tampilkan semua riwayat transaksi yang difilter
         else:
             user_claims_data = get_jwt_claims()
-            transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+            transaction_qry = transaction_qry.filter_by(user_id=user_claims_data["id"])
             transaction_qry = transaction_qry.order_by(Transactions.updated_at.desc())
             if args["status"] is not None:
                 transaction_qry = transaction_qry.filter_by(status=args["status"])
-            transaction_qry = transaction_qry.limit(args["rp"]).offset(offset)
             
             total_entry = len(transaction_qry.all())
+            transaction_qry = transaction_qry.limit(args["rp"]).offset(offset)
+            
             if total_entry%args["rp"] != 0 or total_entry == 0: total_page = int(total_entry/args["rp"]) + 1
             else: total_page = int(total_entry/args["rp"])
-            result_json = {"page":args["p"], "total_page":total_page, "per_page":args["rp"]}
+            result_json = {
+                "total_entry": total_entry, "page":args["p"], "total_page":total_page, "per_page":args["rp"]
+            }
+            
             rows = []
             for each_transaction in transaction_qry.all():
                 marshal_transaction = marshal(each_transaction, Transactions.response_fields)
