@@ -58,8 +58,8 @@ class ProductManagementResources(Resource):
             for row in qry.all():
                 marshal_product = marshal(row, Products.response_fields)
                 rows.append(marshal_product)
-            marshal_out["data"] = rows
-            return marshal_out, 200, {"Content-Type": "application/json"}
+            result_json["data"] = rows
+            return result_json, 200, {"Content-Type": "application/json"}
         else:
             qry = Products.query.get(id)
             if qry is None:
@@ -209,8 +209,8 @@ class UserManagementResources(Resource):
             for row in user_qry.all():
                 marshal_user = marshal(row, Users.response_fields)
                 rows.append(marshal_user)
-            marshal_out["data"] = rows
-            return marshal_out, 200, {"Content-Type": "application/json"}
+            result_json["data"] = rows
+            return result_json, 200, {"Content-Type": "application/json"}
         else:
             user_qry = Users.query.get(id)
             if user_qry is None:
@@ -254,7 +254,10 @@ class TransactionManagementResources(Resource):
                 marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
                 shipment_method_qry = ShipmentMethods.query.get(marshal_transaction["shipment_method_id"])
                 payment_method_qry = PaymentMethods.query.get(marshal_transaction["payment_method_id"])
-                marshal_transaction["nama_pengguna"] = Users.query.get(transaction_qry.user_id)
+                print("CUY")
+                user_qry = Users.query.get(transaction_qry.user_id)
+                marshal_transaction["nama_pengguna"] = user_qry.nama_depan+" "+user_qry.nama_belakang
+                print("MASHOK")
                 if marshal_transaction["status"] == "staging":
                     marshal_transaction["shipment_method"] = None
                     marshal_transaction["payment_method"] = None
