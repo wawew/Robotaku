@@ -68,12 +68,6 @@ def reset_db():
     db.session.add(shipment2)
     db.session.add(shipment3)
     db.session.commit()
-    
-    # db transaction user1 init
-    # db transaction user2 init
-    # db transaction user3 init
-
-    # db cart init
 
 
 @pytest.fixture
