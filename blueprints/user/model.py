@@ -49,3 +49,27 @@ class Users(db.Model):
 
     def __repr__(self):
         return "<Users %r>" % self.id
+
+
+class Wishlists(db.Model):
+    __tablename__ = "wishlists"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now())
+    updated_at = db.Column(db.DateTime, default=datetime.now())
+    
+    response_fields = {
+        "created_at": fields.DateTime,
+        "updated_at": fields.DateTime,
+        "id": fields.Integer,
+        "product_id": fields.Integer,
+        "user_id": fields.Integer,
+    }
+    
+    def __init__(self, product_id, user_id):
+        self.product_id = product_id
+        self.user_id = user_id
+
+    def __repr__(self):
+        return "<Wishlists %r>" % self.id
