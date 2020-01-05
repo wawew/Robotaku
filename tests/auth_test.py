@@ -2,7 +2,7 @@ import json, logging
 from . import reset_db, user
 from password_strength import PasswordPolicy
 
-class TestAuthCrud:
+class TestAuth:
     # GET METHOD
     def test_invalid_user(self, user):
         reset_db()

@@ -19,7 +19,7 @@ class ProductResources(Resource):
             rows = []
             parser =reqparse.RequestParser()
             parser.add_argument("keyword", location="args")
-            parser.add_argument("category", location="args")
+            parser.add_argument("kategori", location="args")
             parser.add_argument("lower_price", type=int, location="args", default=0)
             parser.add_argument("upper_price", type=int, location="args", default=999999999999999)
             parser.add_argument("rating", type=int, location="args")
@@ -31,8 +31,8 @@ class ProductResources(Resource):
             qry = Products.query.filter_by(status=True)
             if args["keyword"] is not None:
                 qry = qry.filter(Products.nama.like("%"+args["keyword"]+"%"))
-            if args["category"] is not None:
-                qry = qry.filter_by(kategori=args["category"])
+            if args["kategori"] is not None:
+                qry = qry.filter_by(kategori=args["kategori"])
             if args["lower_price"] is not None:
                 qry = qry.filter(Products.harga >= args["lower_price"])
             if args["upper_price"] is not None:
