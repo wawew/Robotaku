@@ -61,8 +61,19 @@ def reset_db():
     db.session.commit()
     
     # db shipment method init    
+    shipment1 = ShipmentMethods("JENI Yosh", 18000)
+    shipment2 = ShipmentMethods("SangKodok Sehari", 15000)
+    shipment3 = ShipmentMethods("Wahaha Reguler", 7000)
+    db.session.add(shipment1)
+    db.session.add(shipment2)
+    db.session.add(shipment3)
+    db.session.commit()
     
-    # db transaction init
+    # db transaction user1 init
+    # db transaction user2 init
+    # db transaction user3 init
+
+    # db cart init
 
 
 @pytest.fixture
