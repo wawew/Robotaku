@@ -29,9 +29,11 @@ def reset_db():
     product1 = Products("DC Motor", 90000, "Aktuator & Power System", "Aktuator cocok untuk RC Car")
     product2 = Products("Basher SaberTooth 1/8 Scale", 3200000, "UGV / RC Car", "RC Car dari Basher!")
     product3 = Products("6-DOF Arm Robot Mechanical Frame", 2100000, "Robotik & Kit", "Serial manipulator terbaru!")
+    product4 = Products("Stepper Motor", 15000, "Aktuator & Power System", "Aktuator cocok untuk position control")
     db.session.add(product1)
     db.session.add(product2)
     db.session.add(product3)
+    db.session.add(product4)
     db.session.commit()
 
     # db spec product1 init
@@ -49,6 +51,11 @@ def reset_db():
     spec6 = Specifications(3, "Material: Metal alloy")
     db.session.add(spec5)
     db.session.add(spec6)
+    # db spec product4 init
+    spec7 = Specifications(4, "Power rating: 6 VDC")
+    spec8 = Specifications(4, "Resolution: 200 steps/rev")
+    db.session.add(spec7)
+    db.session.add(spec8)
     db.session.commit()
 
     # db payment method init
