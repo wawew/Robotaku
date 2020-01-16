@@ -36,7 +36,9 @@ class CreateTokenResources(Resource):
             user_claims_data = marshal(qry, Users.jwt_claim_fields)
             user_claims_data["is_admin"] = False
         token = create_access_token(identity=args["email"], user_claims=user_claims_data)
-        return {"token": token, "message": "Token is successfully created"}, 200, {"Content-Type": "application/json"}
+        return {
+            "token": token, "admin": user_claims_data["is_admin"], "message": "Token is successfully created"
+        }, 200, {"Content-Type": "application/json"}
     
     def post(self):
         parser = reqparse.RequestParser()
