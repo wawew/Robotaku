@@ -17,11 +17,12 @@ class CreateTokenResources(Resource):
         special=1
     )
 
-    def get(self):
+    def put(self):
         parser = reqparse.RequestParser()
         parser.add_argument("email", location="json", required=True)
         parser.add_argument("password", location="json", required=True)
         args = parser.parse_args()
+        print(args)
         password = hashlib.md5(args["password"].encode()).hexdigest()
         if args["email"] == "admin@robotaku.id" and args["password"] == "W@wew123":
             user_claims_data = {}
@@ -56,6 +57,9 @@ class CreateTokenResources(Resource):
             db.session.commit()
             return marshal(user, Users.response_fields), 200, {"Content-Type": "application/json"}
         return {"status": "FAILED", "message": "Password is not accepted"}, 400, {"Content-Type": "application/json"}
+
+    def options(self):
+        return 200
 
 
 api.add_resource(CreateTokenResources, "")

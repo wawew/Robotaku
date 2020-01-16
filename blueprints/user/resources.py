@@ -82,6 +82,9 @@ class ProfileResources(Resource):
         db.session.commit()
         return {"message": "Succesfully deleted"}, 200, {"Content-Type": "application/json"}
 
+    def options(self):
+        return 200
+
 
 class TransactionResource(Resource):
     @jwt_required
@@ -138,11 +141,14 @@ class TransactionResource(Resource):
             return result_json, 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
 
+    def options(self):
+        return 200
+
 
 class ShipmentResource(Resource):
     @jwt_required
     @nonadmin_required
-    def get(self):
+    def put(self):
         parser =reqparse.RequestParser()
         parser.add_argument("shipment_method_id", type=int, location="json", required=True)
         parser.add_argument("payment_method_id", type=int, location="json", required=True)
@@ -173,7 +179,7 @@ class ShipmentResource(Resource):
 
     @jwt_required
     @nonadmin_required
-    def put(self):
+    def post(self):
         parser =reqparse.RequestParser()
         parser.add_argument("shipment_method_id", type=int, location="json", required=True)
         parser.add_argument("payment_method_id", type=int, location="json", required=True)
@@ -194,6 +200,9 @@ class ShipmentResource(Resource):
             return marshal(transaction_qry, Transactions.response_fields), 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
 
+    def options(self):
+        return 200
+
 
 class CartResources(Resource):
     @jwt_required
@@ -207,7 +216,10 @@ class CartResources(Resource):
         if transaction_qry is not None:
             cart_qry = Carts.query.filter_by(transaction_id=transaction_qry.id)
             for each_item in cart_qry.all():
+                product_qry = Products.query.get(each_item.product_id)
                 marshal_cart = marshal(each_item, Carts.response_fields)
+                marshal_cart["nama_produk"] = product_qry.nama
+                marshal_cart["harga_satuan"] = product_qry.harga
                 rows.append(marshal_cart)
             return rows, 200, {"Content-Type": "application/json"}
         return {"message": "Your cart is empty"}, 404, {"Content-Type": "application/json"}
@@ -254,6 +266,9 @@ class CartResources(Resource):
         last_added_transaction.updated_at = datetime.now()
         db.session.commit()
         return marshal(last_added_transaction, Transactions.response_fields), 200, {"Content-Type": "application/json"}
+
+    def options(self):
+        return 200
 
 
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
