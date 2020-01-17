@@ -100,10 +100,12 @@ class TransactionResource(Resource):
         offset = (args["p"] - 1)*args["rp"]
 
         # tampilkan detail riwayat transaksi tertentu
-        transaction_qry = Transactions.query.filter(Transactions.status != "staging")
+        user_claims_data = get_jwt_claims()
         if id is not None:
-            transaction_qry = transaction_qry.get(id)
-            if transaction_qry is not None:
+            transaction_qry = Transactions.query.get(id)
+            if transaction_qry is not None and transaction_qry.status != "staging" and user_claims_data["id"] == transaction_qry.user_id:
+                if transaction_qry.status == "staging":
+                    return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
                 marshal_transaction = marshal(transaction_qry, Transactions.response_fields)
                 shipment_method_qry = ShipmentMethods.query.get(marshal_transaction["shipment_method_id"])
                 payment_method_qry = PaymentMethods.query.get(marshal_transaction["payment_method_id"])
@@ -115,8 +117,8 @@ class TransactionResource(Resource):
                 return marshal_transaction, 200, {"Content-Type": "application/json"}
         # tampilkan semua riwayat transaksi yang difilter
         else:
-            user_claims_data = get_jwt_claims()
-            transaction_qry = transaction_qry.filter_by(user_id=user_claims_data["id"])
+            transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+            transaction_qry = transaction_qry.filter(Transactions.status != "staging")
             transaction_qry = transaction_qry.order_by(Transactions.updated_at.desc())
             if args["status"] is not None:
                 transaction_qry = transaction_qry.filter_by(status=args["status"])

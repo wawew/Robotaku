@@ -7,7 +7,7 @@ class TestAuth:
     def test_invalid_user(self, user):
         reset_db()
         data = {"email": "wawawaw", "password": "W@wew123"}
-        res = user.get("/auth", json=data)
+        res = user.put("/api/auth", json=data)
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)
         assert res.status_code == 401
@@ -21,7 +21,7 @@ class TestAuth:
             "nama_depan":"Eni", "nama_belakang":"Lima",
             "email":"eni@robotaku.id", "password":"W@wew123"
         }
-        res = user.post("/auth", json=data)
+        res = user.post("/api/auth", json=data)
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)
         assert res.status_code == 200
@@ -32,7 +32,7 @@ class TestAuth:
             "nama_depan":"Eni", "nama_belakang":"Lima",
             "email":"adi@robotaku.id", "password":"W@wew123"
         }
-        res = user.post("/auth", json=data)
+        res = user.post("/api/auth", json=data)
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)
         assert res.status_code == 400
@@ -45,7 +45,7 @@ class TestAuth:
             "nama_depan":"Eni", "nama_belakang":"Lima",
             "email":"adi@robotaku.id", "password":"Wawew123"
         }
-        res = user.post("/auth", json=data)
+        res = user.post("/api/auth", json=data)
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)
         assert res.status_code == 400
