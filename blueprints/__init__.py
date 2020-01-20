@@ -21,9 +21,9 @@ db_dev = os.environ["THIS_DB_DEV"]
 try:
     env = os.environ.get("FLASK_ENV", "development")
     if env == "testing":
-        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@localhost:3306/{db_test}".format(uname=uname, pwd=pwd, db_test=db_test)
+        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@robotaku-db.cbb8twxemu9y.ap-southeast-1.rds.amazonaws.com:3306/{db_test}".format(uname=uname, pwd=pwd, db_test=db_test)
     else:
-        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@localhost:3306/{db_dev}".format(uname=uname, pwd=pwd, db_dev=db_dev)
+        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@robotaku-db.cbb8twxemu9y.ap-southeast-1.rds.amazonaws.com:3306/{db_dev}".format(uname=uname, pwd=pwd, db_dev=db_dev)
 except Exception as error:
     raise error
 

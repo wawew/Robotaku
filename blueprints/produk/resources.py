@@ -59,6 +59,7 @@ class ProductResources(Resource):
             if qry is None or not qry.status:
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
             detail_product = marshal(qry, Products.response_fields)
+            spec_rev_params = {"product_id": id}
             # request specification, lalu append ke query product
             requested_data = requests.get("http://localhost:5000/api/product/specification", json=spec_rev_params)
             specification_json = requested_data.json()

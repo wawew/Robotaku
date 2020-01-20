@@ -3,7 +3,7 @@
 clear
 export FLASK_ENV="development"
 export THIS_UNAME="root" # ganti ke username mysql
-export THIS_PWD="" # ganti ke password mysql
+export THIS_PWD="W@wew123" # ganti ke password mysql
 export THIS_DB_TEST="robotaku_test" # ganti ke nama database yang dipake untuk unit testing
 export THIS_DB_DEV="robotaku" # ganti ke nama database yang dipake untuk development
 
