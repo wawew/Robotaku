@@ -32,7 +32,7 @@ class ProductResources(Resource):
             if args["keyword"] is not None:
                 qry = qry.filter(Products.nama.like("%"+args["keyword"]+"%"))
             if args["kategori"] is not None:
-                qry = qry.filter_by(kategori=args["kategori"])
+                qry = qry.filter(Products.kategori.like("%"+args["kategori"]+"%"))
             if args["lower_price"] is not None:
                 qry = qry.filter(Products.harga >= args["lower_price"])
             if args["upper_price"] is not None:
@@ -60,20 +60,17 @@ class ProductResources(Resource):
                 return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
             detail_product = marshal(qry, Products.response_fields)
             # request specification, lalu append ke query product
-            specification_params = {
-                "product_id": id
-            }
-            requested_data = requests.get("http://localhost:5000/product/specification", json=specification_params)
+            requested_data = requests.get("http://localhost:5000/api/product/specification", json=spec_rev_params)
             specification_json = requested_data.json()
             detail_product["specification"] = specification_json
             # request review, lalu append ke query product
-            review_params = {
-                "product_id": id
-            }
-            requested_data = requests.get("http://localhost:5000/product/review", json=review_params)
+            requested_data = requests.get("http://localhost:5000/api/product/review", json=spec_rev_params)
             review_json = requested_data.json()
             detail_product["reviews"] = review_json
             return detail_product, 200, {"Content-Type": "application/json"}
+
+        def options(self):
+            return 200
 
 
 class SpecificationResources(Resource):
@@ -88,6 +85,9 @@ class SpecificationResources(Resource):
             marshal_specification = marshal(row, Specifications.response_fields)
             rows.append(marshal_specification)
         return rows, 200, {"Content-Type": "application/json"}
+
+    def options(self):
+        return 200
 
 
 class ReviewResources(Resource):
@@ -123,6 +123,9 @@ class ReviewResources(Resource):
                 rows.append(marshal_review)
         result_json["data"] = rows
         return result_json, 200, {"Content-Type": "application/json"}
+
+    def options(self):
+        return 200
 
 
 api_product.add_resource(ProductResources, "", "/<int:id>")
