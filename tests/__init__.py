@@ -99,7 +99,7 @@ def create_token(is_admin=True):
             }
         # do request
         req = call_user(request)
-        res = req.get("/auth", json=data)
+        res = req.get("/api/auth", json=data)
         # store response
         res_json = json.loads(res.data)
         logging.warning("RESULT: %s", res_json)

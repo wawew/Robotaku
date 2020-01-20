@@ -17,11 +17,12 @@ class CreateTokenResources(Resource):
         special=1
     )
 
-    def get(self):
+    def put(self):
         parser = reqparse.RequestParser()
         parser.add_argument("email", location="json", required=True)
         parser.add_argument("password", location="json", required=True)
         args = parser.parse_args()
+        print(args)
         password = hashlib.md5(args["password"].encode()).hexdigest()
         if args["email"] == "admin@robotaku.id" and args["password"] == "W@wew123":
             user_claims_data = {}
@@ -35,7 +36,9 @@ class CreateTokenResources(Resource):
             user_claims_data = marshal(qry, Users.jwt_claim_fields)
             user_claims_data["is_admin"] = False
         token = create_access_token(identity=args["email"], user_claims=user_claims_data)
-        return {"token": token, "message": "Token is successfully created"}, 200, {"Content-Type": "application/json"}
+        return {
+            "token": token, "admin": user_claims_data["is_admin"], "message": "Token is successfully created"
+        }, 200, {"Content-Type": "application/json"}
     
     def post(self):
         parser = reqparse.RequestParser()
@@ -56,6 +59,9 @@ class CreateTokenResources(Resource):
             db.session.commit()
             return marshal(user, Users.response_fields), 200, {"Content-Type": "application/json"}
         return {"status": "FAILED", "message": "Password is not accepted"}, 400, {"Content-Type": "application/json"}
+
+    def options(self):
+        return 200
 
 
 api.add_resource(CreateTokenResources, "")

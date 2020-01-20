@@ -1,3 +1,4 @@
+from flask_cors import CORS
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
 from flask_sqlalchemy import SQLAlchemy
@@ -10,6 +11,7 @@ import json, random, string, os
 
 app = Flask(__name__) # membuat semua blueprint
 app.config["APP_DEBUG"] = True
+CORS(app)
 
 uname = os.environ["THIS_UNAME"]
 pwd = os.environ["THIS_PWD"]
@@ -86,9 +88,9 @@ from blueprints.produk.resources import blueprint_product
 from blueprints.admin.resources import blueprint_admin
 from blueprints.user.resources import blueprint_user
 
-app.register_blueprint(blueprint_auth, url_prefix="/auth")
-app.register_blueprint(blueprint_product, url_prefix="/product")
-app.register_blueprint(blueprint_user, url_prefix="/user")
-app.register_blueprint(blueprint_admin, url_prefix="/admin")
+app.register_blueprint(blueprint_auth, url_prefix="/api/auth")
+app.register_blueprint(blueprint_product, url_prefix="/api/product")
+app.register_blueprint(blueprint_user, url_prefix="/api/user")
+app.register_blueprint(blueprint_admin, url_prefix="/api/admin")
 
 db.create_all()
