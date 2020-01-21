@@ -5,7 +5,7 @@ COPY . /backend
 RUN pip install -r /backend/requirement.txt
 ENV FLASK_ENV="development"
 ENV THIS_UNAME="root"
-ENV THIS_PWD="W@wew123"
+ENV THIS_PWD="wawew123"
 ENV THIS_DB_TEST="robotaku_test"
 ENV THIS_DB_DEV="robotaku"
 WORKDIR /backend
