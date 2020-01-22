@@ -180,3 +180,5 @@ dmypy.json
 # Travis Deployment RSA
 deploy_rsa
 deploy_rsa.pub
+run_script.sh
+test_script.sh
