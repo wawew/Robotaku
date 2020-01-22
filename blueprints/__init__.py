@@ -22,9 +22,9 @@ db_endpoint = os.environ["THIS_DB_ENDPOINT"]
 try:
     env = os.environ.get("FLASK_ENV", "development")
     if env == "testing":
-        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@{db_endpoint}:3306/{db_test}".format(uname=uname, pwd=pwd, db_test=db_test)
+        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@{db_endpoint}:3306/{db_test}".format(uname=uname, pwd=pwd, db_test=db_test, db_endpoint=db_endpoint)
     else:
-        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@{db_endpoint}:3306/{db_dev}".format(uname=uname, pwd=pwd, db_dev=db_dev)
+        app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://{uname}:{pwd}@{db_endpoint}:3306/{db_dev}".format(uname=uname, pwd=pwd, db_dev=db_dev, db_endpoint=db_endpoint)
 except Exception as error:
     raise error
 
