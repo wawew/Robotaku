@@ -2,10 +2,10 @@
 
 eval "$(ssh-agent -s)" &&
 ssh-add -k ~/.ssh/id_rsa &&
-cd /var/www/robotaku-backend #helloworld
+cd /var/www/robotaku-backend
 git pull
 
-source ~/.profile
+source ~/.docker-profile
 echo "$DOCKERHUB_PASS" | docker login --username $DOCKERHUB_USER --password-stdin
 docker stop robotaku-backend
 docker rm robotaku-backend
