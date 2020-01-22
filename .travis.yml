@@ -7,6 +7,9 @@ env:
   global:
   - DOCKER_IMAGE_NAME="robotaku-container"
   - DOCKER_HUB_ORG="wiflash"
+branches:
+  only:
+  - release
 before_install:
 - openssl aes-256-cbc -K $encrypted_2de3dbc0947b_key -iv $encrypted_2de3dbc0947b_iv -in deploy_rsa.enc -out deploy_rsa -d
 - eval "$(ssh-agent -s)"
