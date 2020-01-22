@@ -17,6 +17,12 @@ script:
 - sudo chmod +x deploy.sh
 - sudo chmod 600 deploy_rsa
 after_script:
+- sed -i -e 's|FLASK_ENV_VALUE|'"${FLASK_ENV_VALUE}"'|g' ./Dockerfile
+- sed -i -e 's|THIS_UNAME_VALUE|'"${THIS_UNAME_VALUE}"'|g' ./Dockerfile
+- sed -i -e 's|THIS_PWD_VALUE|'"${THIS_PWD_VALUE}"'|g' ./Dockerfile
+- sed -i -e 's|THIS_DB_TEST_VALUE|'"${THIS_DB_TEST_VALUE}"'|g' ./Dockerfile
+- sed -i -e 's|THIS_DB_DEV_VALUE|'"${THIS_DB_DEV_VALUE}"'|g' ./Dockerfile
+- sed -i -e 's|THIS_DB_ENDPOINT_VALUE|'"${THIS_DB_ENDPOINT_VALUE}"'|g' ./Dockerfile
 - docker build -t ${DOCKER_HUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} .
 - docker push ${DOCKER_HUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID}
 - docker tag ${DOCKER_HUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:be-latest
