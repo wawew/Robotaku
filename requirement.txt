@@ -6,6 +6,7 @@ chardet==3.0.4
 Click==7.0
 coverage==5.0
 Flask==1.1.1
+Flask-Cors==3.0.8
 Flask-JWT-Extended==3.24.1
 Flask-Migrate==2.5.2
 Flask-RESTful==0.3.7
@@ -21,6 +22,7 @@ mock==3.0.5
 more-itertools==8.0.2
 packaging==19.2
 password-strength==0.0.3.post2
+pathlib2==2.3.5
 pluggy==0.13.1
 py==1.8.0
 PyJWT==1.7.1
