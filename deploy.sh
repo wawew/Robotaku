@@ -3,6 +3,7 @@
 eval "$(ssh-agent -s)" &&
 ssh-add -k ~/.ssh/id_rsa &&
 cd /var/www/robotaku-backend
+git checkout release
 git pull
 
 source ~/.docker-profile
