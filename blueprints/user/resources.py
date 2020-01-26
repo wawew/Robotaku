@@ -143,7 +143,7 @@ class TransactionResource(Resource):
             return result_json, 200, {"Content-Type": "application/json"}
         return {"message": "Transaction is not found"}, 404, {"Content-Type": "application/json"}
 
-    def options(self):
+    def options(self, id=None):
         return 200
 
 
@@ -292,7 +292,7 @@ class CartResources(Resource):
                 return {"message": "Successfully deleted."}, 200, {"Content-Type": "application/json"}
         return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
     
-    def options(self):
+    def options(self, id=None):
         return 200
 
 

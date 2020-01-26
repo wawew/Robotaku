@@ -70,8 +70,8 @@ class ProductResources(Resource):
             detail_product["reviews"] = review_json
             return detail_product, 200, {"Content-Type": "application/json"}
 
-        def options(self):
-            return 200
+    def options(self, id=None):
+        return 200
 
 
 class SpecificationResources(Resource):
