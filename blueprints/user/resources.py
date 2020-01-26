@@ -268,13 +268,36 @@ class CartResources(Resource):
         last_added_transaction.updated_at = datetime.now()
         db.session.commit()
         return marshal(last_added_transaction, Transactions.response_fields), 200, {"Content-Type": "application/json"}
-
+    
+    @jwt_required
+    @nonadmin_required
+    def delete(self, id=None):
+        user_claims_data = get_jwt_claims()
+        transaction_qry = Transactions.query.filter_by(user_id=user_claims_data["id"])
+        transaction_qry = transaction_qry.filter_by(status="staging").first()
+        if id is not None and transaction_qry is not None:
+            cart_qry = Carts.query.filter_by(transaction_id=transaction_qry.id)
+            transaction_ids = [cart.id for cart in cart_qry.all()]
+            if id in transaction_ids:
+                # delete specific item in cart
+                cart_item_will_delete = Carts.query.get(id)
+                db.session.delete(cart_item_will_delete)
+                # update transaction based on remaining items in cart
+                total_price = 0
+                for each_item in cart_qry.all():
+                    total_price += each_item.subtotal
+                transaction_qry.total_harga = total_price
+                transaction_qry.updated_at = datetime.now()
+                db.session.commit()
+                return {"message": "Successfully deleted."}, 200, {"Content-Type": "application/json"}
+        return {"message": "ID is not found"}, 404, {"Content-Type": "application/json"}
+    
     def options(self):
         return 200
 
 
 api_user.add_resource(ProductResources, "/product", "/product/<int:id>")
 api_user.add_resource(ProfileResources, "/profile")
-api_user.add_resource(CartResources, "/cart")
+api_user.add_resource(CartResources, "/cart", "/cart/<int:id>")
 api_user.add_resource(ShipmentResource, "/shipment")
 api_user.add_resource(TransactionResource, "/transaction", "/transaction/<int:id>")
