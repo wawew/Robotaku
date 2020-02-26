@@ -9,6 +9,7 @@ git pull
 source ~/.docker-profile
 echo "$DOCKERHUB_PASS" | docker login --username $DOCKERHUB_USER --password-stdin
 docker stop robotaku-backend
-docker rm robotaku-backend
+docker container prune -f
 docker rmi wiflash/robotaku-container:be-latest
+docker image prune -f
 docker run -d --name robotaku-backend -p 5000:5000 wiflash/robotaku-container:be-latest
